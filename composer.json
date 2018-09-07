@@ -1,0 +1,25 @@
+{
+    "name": "aliyunfc/fc-php-sdk",
+    "description": "Aliyun FC SDK for PHP",
+    "keywords": ["php", "fc", "fcunction compute", "aliyun"],
+    "homepage": "http://www.aliyun.com/product/fc/",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "aliyunfc",
+            "email": "ls_huster@163.com"
+        }
+    ],
+    "require": {
+        "php":">=5.5",
+        "guzzlehttp/guzzle": "~6.0"
+    },
+    "require-dev" : {
+        "phpunit/phpunit": "^4.8.35 || ^5.7 || ^6.4 || ^7.0",
+        "satooshi/php-coveralls": "~1.0"
+    },
+    "autoload": {
+        "psr-4": {"AliyunFC\\": "src/AliyunFC"}
+    }
+}
