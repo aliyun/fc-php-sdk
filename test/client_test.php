@@ -245,13 +245,15 @@ class ClientTest extends TestCase {
         $this->assertEquals($services[0]['serviceName'], $prefix . 'abd');
     }
 
-    private function checkFunction($function, $functionName, $desc, $runtime = 'php7.2', $handler = 'index.handler', $envs = ['TestKey' => 'TestValue']) {
+    private function checkFunction($function, $functionName, $desc, $runtime = 'php7.2',
+        $handler = 'index.handler', $envs = ['TestKey' => 'TestValue'], $initializer=null) {
         $etag = $function['headers']['Etag'][0];
         $this->assertTrue($etag != '');
         $function = $function['data'];
         $this->assertEquals($function['functionName'], $functionName);
         $this->assertEquals($function['runtime'], $runtime);
         $this->assertEquals($function['handler'], $handler);
+        $this->assertEquals($function['initializer'], $initializer);
         $this->assertEquals($function['description'], $desc);
         $this->assertEquals($function['environmentVariables'], $envs);
         $this->assertTrue(isset($function['codeChecksum']));
@@ -261,6 +263,7 @@ class ClientTest extends TestCase {
         $this->assertTrue(isset($function['functionId']));
         $this->assertTrue(isset($function['memorySize']));
         $this->assertTrue(isset($function['timeout']));
+        $this->assertTrue(isset($function['initializationTimeout']));
 
         $serviceName = $this->serviceName;
         $checksum    = $function['codeChecksum'];
@@ -269,6 +272,7 @@ class ClientTest extends TestCase {
         $this->assertEquals($function['functionName'], $functionName);
         $this->assertEquals($function['runtime'], $runtime);
         $this->assertEquals($function['handler'], $handler);
+        $this->assertEquals($function['initializer'], $initializer);
         $this->assertEquals($function['description'], $desc);
 
         $code = $this->fcClient->getFunctionCode($serviceName, $functionName);
@@ -285,11 +289,75 @@ class ClientTest extends TestCase {
         $this->assertContains('"ErrorMessage":"the resource being modified has been changed"', $err);
     }
 
+    public function testFunctionCRUDInitialize() {
+        $serviceName = $this->serviceName;
+        $serviceDesc = "测试的service, php sdk 创建";
+        $this->fcClient->createService($serviceName, $serviceDesc);
+        $functionName = "test_initialize";
+
+        $ret = $this->fcClient->createFunction(
+            $serviceName,
+            array(
+                'functionName'         => $functionName,
+                'handler'              => 'counter.handler',
+                'initializer'          => 'counter.initializer',
+                'runtime'              => 'php7.2',
+                'memorySize'           => 128,
+                'code'                 => array(
+                    'zipFile' => base64_encode(file_get_contents(__DIR__ . '/counter.zip')),
+                ),
+                'description'          => "test function",
+                'environmentVariables' => ['TestKey' => 'TestValue'],
+            )
+        );
+        $this->checkFunction($ret, $functionName, 'test function', $runtime = 'php7.2', $handler='counter.handler', $envs=['TestKey' => 'TestValue'], $initializer='counter.initializer');
+
+        $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName);
+        $this->assertEquals($invkRet['data'], '2');
+
+        $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', ['x-fc-invocation-type' => 'Async']);
+        $this->assertEquals($invkRet['data'], '');
+        $this->assertTrue(isset($invkRet['headers']['X-Fc-Request-Id']));
+
+        $ret = $this->fcClient->updateFunction(
+            $serviceName,
+            $functionName,
+            array(
+                'functionName'         => $functionName,
+                'handler'              => 'counter.handler',
+                'initializer'          => 'counter.initializer',
+                'runtime'              => 'php7.2',
+                'memorySize'           => 128,
+                'code'                 => array(
+                    'zipFile' => base64_encode(file_get_contents(__DIR__ . '/counter.zip')),
+                ),
+                'description'          => "test update function",
+                'environmentVariables' => ['newTestKey' => 'newTestValue'],
+            )
+        );
+        $this->checkFunction($ret, $functionName, 'test update function', $runtime = 'php7.2', $handler='counter.handler', $envs=['newTestKey' => 'newTestValue'], $initializer='counter.initializer');
+        $etag = $ret['headers']['Etag'][0];
+        # now success with valid etag.
+        $this->fcClient->deleteFunction($serviceName, $functionName, $headers = ['if-match' => $etag]);
+
+        $err = '';
+        try {
+            $this->fcClient->getFunction($serviceName, $functionName);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+        }
+        $this->assertTrue($err != '');
+
+        $this->subTestListFunctions($serviceName);
+
+        $this->clearAllTestRes();
+    }
+
     public function testFunctionCRUDInvoke() {
         $serviceName = $this->serviceName;
         $serviceDesc = "测试的service, php sdk 创建";
         $this->fcClient->createService($serviceName, $serviceDesc);
-        $functionName = "test";
+        $functionName = "test_invoke";
 
         $ret = $this->fcClient->createFunction(
             $serviceName,

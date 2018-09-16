@@ -86,6 +86,30 @@ $fcClient->createFunction(
 //Invoke function synchronously.
 $fcClient->invokeFunction('service_name', 'function_name');
 
+/*
+Create function with initializer.
+the current directory has a main.zip file (main.php which hava functions of my_handler and my_initializer)
+set environment variables {'testKey': 'testValue'}
+*/
+$fcClient->createFunction(
+    'service_name_with_initializer',
+    array(
+        'functionName' => $functionName,
+        'handler' => 'index.handler',
+        'initializer' => 'index.initializer',
+        'runtime' => 'php7.2',
+        'memorySize' => 128,
+        'code' => array(
+        'zipFile' => base64_encode(file_get_contents(__DIR__ . '/main.zip')),
+        ),
+        'description' => "test function with initializer",
+        'environmentVariables' => ['testKey' => 'testValue'],
+            )
+         );
+
+//Invoke function synchronously.
+$fcClient->invokeFunction('service_name_with_initializer', 'function_name');
+
 //Create trigger, for example: oss trigger
 $prefix = 'pre';
 $suffix = 'suf';
