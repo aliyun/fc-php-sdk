@@ -73,7 +73,7 @@ $fcClient->createFunction(
     array(
         'functionName' => $functionName,
         'handler' => 'index.handler',
-        'runtime' => 'php7',
+        'runtime' => 'php7.2',
         'memorySize' => 128,
         'code' => array(
             'zipFile' => base64_encode(file_get_contents(__DIR__ . '/main.zip')),

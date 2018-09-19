@@ -245,7 +245,7 @@ class ClientTest extends TestCase {
         $this->assertEquals($services[0]['serviceName'], $prefix . 'abd');
     }
 
-    private function checkFunction($function, $functionName, $desc, $runtime = 'php7', $handler = 'index.handler', $envs = ['TestKey' => 'TestValue']) {
+    private function checkFunction($function, $functionName, $desc, $runtime = 'php7.2', $handler = 'index.handler', $envs = ['TestKey' => 'TestValue']) {
         $etag = $function['headers']['Etag'][0];
         $this->assertTrue($etag != '');
         $function = $function['data'];
@@ -296,7 +296,7 @@ class ClientTest extends TestCase {
             array(
                 'functionName'         => $functionName,
                 'handler'              => 'index.handler',
-                'runtime'              => 'php7',
+                'runtime'              => 'php7.2',
                 'memorySize'           => 128,
                 'code'                 => array(
                     'zipFile' => base64_encode(file_get_contents(__DIR__ . '/index.zip')),
@@ -305,7 +305,7 @@ class ClientTest extends TestCase {
                 'environmentVariables' => ['TestKey' => 'TestValue'],
             )
         );
-        $this->checkFunction($ret, $functionName, 'test function', $runtime = 'php7');
+        $this->checkFunction($ret, $functionName, 'test function', $runtime = 'php7.2');
 
         $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, $payload = "hello world");
         $this->assertEquals($invkRet['data'], 'hello world');
@@ -356,7 +356,7 @@ class ClientTest extends TestCase {
                 array(
                     'functionName' => $functionName,
                     'handler'      => 'index.handler',
-                    'runtime'      => 'php7',
+                    'runtime'      => 'php7.2',
                     'code'         => array(
                         'zipFile' => base64_encode(file_get_contents(__DIR__ . '/index.zip')),
                     ),
@@ -420,7 +420,7 @@ class ClientTest extends TestCase {
             array(
                 'functionName' => $functionName,
                 'handler'      => 'index.handler',
-                'runtime'      => 'php7',
+                'runtime'      => 'php7.2',
                 'memorySize'   => 128,
                 'code'         => array(
                     'zipFile' => base64_encode(file_get_contents(__DIR__ . '/index.zip')),
@@ -434,7 +434,7 @@ class ClientTest extends TestCase {
             array(
                 'functionName' => $httpFunctionName,
                 'handler'      => 'index_http.handler',
-                'runtime'      => 'php7',
+                'runtime'      => 'php7.2',
                 'memorySize'   => 128,
                 'code'         => array(
                     'zipFile' => base64_encode(file_get_contents(__DIR__ . '/index_http.zip')),
