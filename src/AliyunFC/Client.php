@@ -92,7 +92,6 @@ class Client {
         if ($query) {
             $options['query'] = $query;
         }
-
         $res = $client->request($method, $url, $options);
 
         $respStatusCode = $res->getStatusCode();
@@ -262,11 +261,13 @@ class Client {
         if (!(isset($opts['functionName']) && isset($opts['runtime']) && isset($opts['handler']) && isset($opts['code']))) {
             throw new \Exception('functionName|handler|runtime|code parameters must be specified');
         }
-        $opts['functionName'] = strval($opts['functionName']);
-        $opts['runtime']      = strval($opts['runtime']);
-        $opts['handler']      = strval($opts['handler']);
-        $opts['memorySize']   = isset($opts['memorySize']) ? intval($opts['memorySize']) : 256;
-        $opts['timeout']      = isset($opts['timeout']) ? intval($opts['timeout']) : 60;
+        $opts['functionName']          = strval($opts['functionName']);
+        $opts['runtime']               = strval($opts['runtime']);
+        $opts['handler']               = strval($opts['handler']);
+        $opts['initializer']           = isset($opts['initializer']) ? strval($opts['initializer']) : null;
+        $opts['memorySize']            = isset($opts['memorySize']) ? intval($opts['memorySize']) : 256;
+        $opts['timeout']               = isset($opts['timeout']) ? intval($opts['timeout']) : 60;
+        $opts['initializationTimeout'] = isset($opts['initializationTimeout']) ? intval($opts['initializationTimeout']) : 30;
     }
 
     public function createFunction($serviceName, $functionPayload, $headers = []) {
