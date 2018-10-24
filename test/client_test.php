@@ -246,7 +246,7 @@ class ClientTest extends TestCase {
     }
 
     private function checkFunction($function, $functionName, $desc, $runtime = 'php7.2',
-        $handler = 'index.handler', $envs = ['TestKey' => 'TestValue'], $initializer=null) {
+        $handler = 'index.handler', $envs = ['TestKey' => 'TestValue'], $initializer = null) {
         $etag = $function['headers']['Etag'][0];
         $this->assertTrue($etag != '');
         $function = $function['data'];
@@ -310,7 +310,7 @@ class ClientTest extends TestCase {
                 'environmentVariables' => ['TestKey' => 'TestValue'],
             )
         );
-        $this->checkFunction($ret, $functionName, 'test function', $runtime = 'php7.2', $handler='counter.handler', $envs=['TestKey' => 'TestValue'], $initializer='counter.initializer');
+        $this->checkFunction($ret, $functionName, 'test function', $runtime = 'php7.2', $handler = 'counter.handler', $envs = ['TestKey' => 'TestValue'], $initializer = 'counter.initializer');
 
         $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName);
         $this->assertEquals($invkRet['data'], '2');
@@ -335,7 +335,7 @@ class ClientTest extends TestCase {
                 'environmentVariables' => ['newTestKey' => 'newTestValue'],
             )
         );
-        $this->checkFunction($ret, $functionName, 'test update function', $runtime = 'php7.2', $handler='counter.handler', $envs=['newTestKey' => 'newTestValue'], $initializer='counter.initializer');
+        $this->checkFunction($ret, $functionName, 'test update function', $runtime = 'php7.2', $handler = 'counter.handler', $envs = ['newTestKey' => 'newTestValue'], $initializer = 'counter.initializer');
         $etag = $ret['headers']['Etag'][0];
         # now success with valid etag.
         $this->fcClient->deleteFunction($serviceName, $functionName, $headers = ['if-match' => $etag]);
@@ -529,8 +529,8 @@ class ClientTest extends TestCase {
         $triggerType   = 'oss';
         $triggerName   = 'test-trigger-oss';
         $sourceArn     = sprintf("acs:oss:%s:%s:%s", $this->region, $this->accountId, $this->codeBucket);
-        $prefix        = 'pre';
-        $suffix        = 'suf';
+        $prefix        = 'pre' . createUuid();
+        $suffix        = 'suf' . createUuid();
         $triggerConfig = [
             'events' => ['oss:ObjectCreated:*'],
             'filter' => [

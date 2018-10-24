@@ -224,17 +224,21 @@ class Client {
         return $this->doRequest($method, $path, $headers, $data = $content);
     }
 
-    public function getService($serviceName, $headers = []) {
+    public function getService($serviceName, $headers = [], $qualifier = null) {
         /*
         get the specified service. see: https://help.aliyun.com/document_detail/52877.html#getservice
         @param service_name: name of the service.
         @param headers, optional
+        @param qualifier: (optional, string) qualifier of service.
         1, 'x-fc-trace-id': string (a uuid to do the request tracing)
         2, 'if-match': string
         3, user define key value
         @return: array
          */
-        $method  = 'GET';
+        $method = 'GET';
+        if ($qualifier != null && $qualifier != "") {
+            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+        }
         $path    = sprintf('/%s/services/%s', $this->apiVersion, $serviceName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers);
@@ -335,35 +339,43 @@ class Client {
         return $this->doRequest($method, $path, $headers);
     }
 
-    public function getFunction($serviceName, $functionName, $headers = []) {
+    public function getFunction($serviceName, $functionName, $headers = [], $qualifier = null) {
         /*
         getFunction. see: https://help.aliyun.com/document_detail/52877.html#getfunction
         @param serviceName : require
         @param functionName: require
         @param headers, optional
+        @param qualifier: (optional, string) qualifier of service.
         1, 'x-fc-trace-id': string (a uuid to do the request tracing)
         2, 'if-match': string
         3, user define key value
         @return: array
          */
-        $method  = 'GET';
+        $method = 'GET';
+        if ($qualifier != null && $qualifier != "") {
+            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+        }
         $path    = sprintf('/%s/services/%s/functions/%s', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers);
     }
 
-    public function getFunctionCode($serviceName, $functionName, $headers = []) {
+    public function getFunctionCode($serviceName, $functionName, $headers = [], $qualifier = null) {
         /*
         getFunctionCode. see: https://help.aliyun.com/document_detail/52877.html#getfunctioncode
         @param serviceName : require
         @param functionName: require
         @param headers, optional
+        @param qualifier: (optional, string) qualifier of service.
         1, 'x-fc-trace-id': string (a uuid to do the request tracing)
         2, 'if-match': string
         3, user define key value
         @return: array
          */
-        $method  = 'GET';
+        $method = 'GET';
+        if ($qualifier != null && $qualifier != "") {
+            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+        }
         $path    = sprintf('/%s/services/%s/functions/%s/code', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers);
@@ -380,25 +392,33 @@ class Client {
         3, user define key value
         @return: array
          */
-        $method  = 'GET';
+        $method = 'GET';
+        if (isset($options['qualifier'])) {
+            $qualifier   = $options['qualifier'];
+            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+        }
         $path    = sprintf('/%s/services/%s/functions', $this->apiVersion, $serviceName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
     }
 
-    public function invokeFunction($serviceName, $functionName, $payload = '', $headers = []) {
+    public function invokeFunction($serviceName, $functionName, $payload = '', $headers = [], $qualifier = null) {
         /*
         invokeFunction. see: https://help.aliyun.com/document_detail/52877.html#invokefunction
         @param serviceName : require
         @param functionName: require
         @param payload: (optional, bytes or seekable file-like object): the input of the function.
         @param headers: (optional, array) user-defined request header.
+        @param qualifier: (optional, string) qualifier of service.
         'x-fc-invocation-type' : require, 'Sync'/'Async' ,only two choice
         'x-fc-trace-id' : option (a uuid to do the request tracing)
         other can add user define header
         @return: array
          */
-        $method  = 'POST';
+        $method = 'POST';
+        if ($qualifier != null && $qualifier != "") {
+            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+        }
         $path    = sprintf('/%s/services/%s/functions/%s/invocations', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers, $data = $payload);
@@ -494,6 +514,247 @@ class Client {
         $path    = sprintf('/%s/services/%s/functions/%s/triggers', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
+
+    public function publishVersion($serviceName, $description = "", $headers = []) {
+        /*
+        Publish a version.
+        @param serviceName: (required, string), name of the service.
+        @param description: (optional, string) the readable description of the version.
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, 'if-match': string (publish the version only when matched the given etag.)
+        3, user define key value
+        @return: array
+        [
+        headers => array(),
+        //array of the version attributes.
+        data =>
+        [
+        'versionId' => 'string',
+        'description' => 'string',
+        'createdTime' =>  'string',
+        'lastModifiedTime' => 'string',
+        ]
+        ]
+         */
+
+        $method  = 'POST';
+        $path    = sprintf('/%s/services/%s/versions', $this->apiVersion, $serviceName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        $payload = array(
+            'description' => $description,
+        );
+
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+
+    public function listVersions($serviceName, $options = [], $headers = []) {
+        /*
+        List the versions of the current service.
+        @param serviceName: (required, string), name of the service.
+        @param options, optional
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, user define key value
+        @return: arrray
+        [
+        headers => array(),
+        // array, including all function information.
+        data =>
+        [
+        'versions' =>
+        [
+        [
+        'versionId' => 'string',
+        'description' => 'string',
+        'createdTime' => 'string',
+        'lastModifiedTime' => 'string',
+        ],
+        ...
+        ],
+        'nextToken' => 'string'
+        ]
+        ]
+         */
+        $method  = 'GET';
+        $path    = sprintf('/%s/services/%s/versions', $this->apiVersion, $serviceName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
+
+    public function deleteVersion($serviceName, $versionId, $headers = []) {
+        /*
+        Delete a version.
+        @param serviceName: (required, string), name of the service.
+        @param versionId: (required, string), Id of the version.
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, user define key value
+        :return: array
+         */
+        $method  = 'DELETE';
+        $path    = sprintf('/%s/services/%s/versions/%s', $this->apiVersion, $serviceName, $versionId);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers);
+    }
+
+    public function createAlias($serviceName, $payload = [], $headers = []) {
+        /*
+        Create an alias.
+        @param serviceName: (required, string), name of the service.
+        @param payload ['aliasName' => aliasName, 'versionId'=> versionId, ...]
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, user define key value
+        @return: array
+        [
+        'headers' => array(),
+        //array of the version attributes.
+        'data' =>
+        [
+        'aliasName' => 'string'
+        'versionId' => 'string',
+        'description' => 'string',
+        'additionalVersionWeight' => 'array',
+        'createdTime' => 'string',
+        'lastModifiedTime' => 'string',
+        ]
+        ]
+         */
+        $method                    = 'POST';
+        $path                      = sprintf('/%s/services/%s/aliases', $this->apiVersion, $serviceName);
+        $headers                   = $this->buildCommonHeaders($method, $path, $headers);
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+
+    public function getAlias($serviceName, $aliasName, $headers = []) {
+        /*
+        Get the alias.
+        @param serviceName: (required, string) name of the service.
+        @param aliasName: (required, string) name of the alias.
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, user define key value
+        @return: array
+        [
+        'headers' => array(),
+        //array alias attributes.
+        'data' =>
+        [
+        'aliasName' => 'string'
+        'versionId' => 'string',
+        'description' => 'string',
+        'additionalVersionWeight' => 'array',
+        'createdTime' => 'string',
+        'lastModifiedTime' => 'string',
+        ]
+        ]
+         */
+        $method  = 'GET';
+        $path    = sprintf('/%s/services/%s/aliases/%s', $this->apiVersion, $serviceName, $aliasName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers);
+    }
+
+    public function updateAlias($serviceName, $aliasName, $payload = [], $headers = []) {
+        /*
+        Update an alias.
+        @param serviceName: (required, string), name of the service.
+        @param aliasName: (required, string) name of the alias.
+        @payload ['versionId'=> versionId, 'additionalVersionWeight' => additionalVersionWeight ...]
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, 'if-match': string (update the alias only when matched the given etag.)
+        3, user define key value
+        @return: array
+        headers: dict
+        data: dict of the version attributes.
+        {
+        'aliasName': 'string'
+        'versionId': 'string',
+        'description': 'string',
+        'additionalVersionWeight': 'dict',
+        'createdTime': 'string',
+        'lastModifiedTime': 'string',
+        }
+         */
+        $method  = 'PUT';
+        $path    = sprintf('/%s/services/%s/aliases/%s', $this->apiVersion, $serviceName, $aliasName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+
+    public function listAliases($serviceName, $options = [], $headers = []) {
+        /*
+        List the aliases in the current service.
+        @param serviceName: (required, string), name of the service.
+        @param options: (optional, array)
+        [
+        "limit" => "int",
+        "nextToken" => "string",
+        "prefix" => "string",
+        "startKey" => "string",
+        ]
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, user define key value
+        @return: array
+        [
+        headers => array(),
+        //array, including all aliase information.
+        data =>
+        [
+        'aliases'=>
+        [
+        [
+        'aliasName'=> 'string'
+        'versionId'=> 'string',
+        'description'=> 'string',
+        'additionalVersionWeight'=> 'array',
+        'createdTime'=> 'string',
+        'lastModifiedTime'=> 'string',
+        ],
+        ...
+        ],
+        'nextToken'=> 'string'
+        ]
+        ]
+         */
+
+        $method  = 'GET';
+        $path    = sprintf('/%s/services/%s/aliases', $this->apiVersion, $serviceName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
+
+    public function deleteAlias($serviceName, $aliasName, $headers = []) {
+        /*
+        Delete an aliase.
+        @param serviceName: (required, string), name of the service.
+        @param aliasName: (required, string), name of the alias.
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, 'if-match': string (delete the alias only when matched the given etag.)
+        3, user define key value
+        :return: array
+         */
+        $method  = 'DELETE';
+        $path    = sprintf('/%s/services/%s/aliases/%s', $this->apiVersion, $serviceName, $aliasName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers);
     }
 
 }
