@@ -543,7 +543,7 @@ class VersioningTest extends TestCase {
             ['aliasName'              => 'test',
                 'versionId'               => $v1,
                 'description'             => 'test alias',
-                'additionalVersionWeight' => ["1" => 0.9],
+                'additionalVersionWeight' => [$v1 => 1],
             ]);
 
         $ret = $this->fcClient->updateFunction(
@@ -552,7 +552,7 @@ class VersioningTest extends TestCase {
             array(
                 'handler'     => 'index.handler',
                 'runtime'     => 'php7.2',
-                'memorySize'  => 256,
+                'memorySize'  => 128,
                 'code'        => array(
                     'zipFile' => base64_encode(file_get_contents(__DIR__ . '/new_index.zip')),
                 ),
@@ -566,23 +566,23 @@ class VersioningTest extends TestCase {
             ['aliasName'              => 'prod',
                 'versionId'               => $v2,
                 'description'             => 'test alias',
-                'additionalVersionWeight' => ["1" => 0.8],
+                'additionalVersionWeight' => [$v2 => 1],
             ]);
 
         $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName);
         $this->assertEquals($invkRet['data'], 'new hello world');
 
-        // $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], $v1);
-        // $this->assertEquals($invkRet['data'], 'new hello world');
+        $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], $v1);
+        $this->assertEquals($invkRet['data'], 'hello world');
 
-        // $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], "test");
-        // $this->assertEquals($invkRet['data'], 'new hello world');
+        $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], "test");
+        $this->assertEquals($invkRet['data'], 'hello world');
 
-        // $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], $v2);
-        // $this->assertEquals($invkRet['data'], 'new hello world');
+        $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], $v2);
+        $this->assertEquals($invkRet['data'], 'new hello world');
 
-        // $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], "prod");
-        // $this->assertEquals($invkRet['data'], 'new hello world');
+        $invkRet = $this->fcClient->invokeFunction($serviceName, $functionName, '', [], "prod");
+        $this->assertEquals($invkRet['data'], 'new hello world');
 
     }
 
