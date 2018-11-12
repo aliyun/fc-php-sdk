@@ -237,7 +237,7 @@ class Client {
          */
         $method = 'GET';
         if ($qualifier != null && $qualifier != "") {
-            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+            $serviceName = sprintf("%s.%s", $serviceName, $qualifier);
         }
         $path    = sprintf('/%s/services/%s', $this->apiVersion, $serviceName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
@@ -353,7 +353,7 @@ class Client {
          */
         $method = 'GET';
         if ($qualifier != null && $qualifier != "") {
-            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+            $serviceName = sprintf("%s.%s", $serviceName, $qualifier);
         }
         $path    = sprintf('/%s/services/%s/functions/%s', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
@@ -374,7 +374,7 @@ class Client {
          */
         $method = 'GET';
         if ($qualifier != null && $qualifier != "") {
-            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+            $serviceName = sprintf("%s.%s", $serviceName, $qualifier);
         }
         $path    = sprintf('/%s/services/%s/functions/%s/code', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
@@ -395,7 +395,7 @@ class Client {
         $method = 'GET';
         if (isset($options['qualifier'])) {
             $qualifier   = $options['qualifier'];
-            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+            $serviceName = sprintf("%s.%s", $serviceName, $qualifier);
         }
         $path    = sprintf('/%s/services/%s/functions', $this->apiVersion, $serviceName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
@@ -417,7 +417,7 @@ class Client {
          */
         $method = 'POST';
         if ($qualifier != null && $qualifier != "") {
-            $serviceName = sprintf("%s$%s", $serviceName, $qualifier);
+            $serviceName = sprintf("%s.%s", $serviceName, $qualifier);
         }
         $path    = sprintf('/%s/services/%s/functions/%s/invocations', $this->apiVersion, $serviceName, $functionName);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
