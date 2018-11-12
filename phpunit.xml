@@ -24,7 +24,7 @@
         <testsuite name="ClientTest">
             <directory suffix=".php">./test</directory>
         </testsuite>
-         <testsuite name="VersioningTest">
+        <testsuite name="VersioningTest">
             <directory suffix=".php">./test</directory>
         </testsuite>
     </testsuites>

@@ -71,7 +71,7 @@ class VersioningTest extends TestCase {
             ),
             "role"           => $role,
             "vpcConfig"      => $vpcConfig,
-            "nasConfig"      => $nasConfig,
+            //"nasConfig"      => $nasConfig,
             'internetAccess' => true,
         );
     }
@@ -586,7 +586,7 @@ class VersioningTest extends TestCase {
 
     }
 
-    public function testTrigger() {
+    public function disTrigger() {
         $serviceName = $this->serviceName;
         $serviceDesc = "测试的service, php sdk 创建";
         $this->fcClient->createService(
