@@ -77,7 +77,7 @@ class Auth {
 
     private function getSignResource($unescaped_path, $unescaped_queries) {
         if (!is_array($unescaped_queries)) {
-            throw new Exception("`array` type required for queries");
+            throw new \Exception("`array` type required for queries");
         }
 
         $params = [];

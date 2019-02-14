@@ -15,7 +15,7 @@ class Client {
 
     public function __construct($options) {
         if (!(isset($options['endpoint']) && isset($options['accessKeyID']) && isset($options['accessKeySecret']))) {
-            throw new Exception('endpoint|AccessKeyID|accessKeySecret parameters must be specified to construct the Client');
+            throw new \Exception('endpoint|AccessKeyID|accessKeySecret parameters must be specified to construct the Client');
         }
 
         $this->endpoint   = $this->normalizeEndpoint($options['endpoint']);
