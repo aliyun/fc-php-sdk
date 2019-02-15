@@ -822,4 +822,17 @@ class ClientTest extends TestCase {
         $this->assertEquals(count($listTriggerResp['triggers']), 1);
         $this->fcClient->deleteTrigger($serviceName, $functionName, $triggerName);
     }
+
+    public function testException() {
+        $err = '';
+        try {
+            $fcClient = new Client([
+                'accessKeyID'     => 'ACCESS_KEY_ID',
+                'accessKeySecret' => 'ACCESS_KEY_SECRET',
+            ]);
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+        }
+        $this->assertTrue($err != '');
+    }
 }
