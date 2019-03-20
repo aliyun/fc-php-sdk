@@ -515,8 +515,9 @@ class ClientTest extends TestCase {
         $this->subTestHttpTrigger($serviceName, $httpFunctionName);
     }
 
-    private function checkTriggerResponse($resp, $triggerName, $triggerType, $triggerConfig, $sourceArn, $invocationRole) {
+    private function checkTriggerResponse($resp, $triggerName, $description, $triggerType, $triggerConfig, $sourceArn, $invocationRole) {
         $this->assertEquals($resp['triggerName'], $triggerName);
+        $this->assertEquals($resp['description'], $description);
         $this->assertEquals($resp['triggerType'], $triggerType);
         $this->assertEquals($resp['sourceArn'], $sourceArn);
         $this->assertEquals($resp['invocationRole'], $invocationRole);
@@ -528,6 +529,7 @@ class ClientTest extends TestCase {
     private function subTestOssTrigger($serviceName, $functionName) {
         $triggerType   = 'oss';
         $triggerName   = 'test-trigger-oss';
+        $createTriggerDesc = 'create oss trigger';
         $sourceArn     = sprintf("acs:oss:%s:%s:%s", $this->region, $this->accountId, $this->codeBucket);
         $prefix        = 'pre' . createUuid();
         $suffix        = 'suf' . createUuid();
@@ -545,6 +547,7 @@ class ClientTest extends TestCase {
             $functionName,
             array(
                 'triggerName'    => $triggerName,
+                'description'    => $createTriggerDesc,
                 'triggerType'    => $triggerType,
                 'invocationRole' => $this->invocationRoleOss,
                 'sourceArn'      => $sourceArn,
@@ -553,7 +556,7 @@ class ClientTest extends TestCase {
         );
 
         $triggerData = $ret['data'];
-        $this->checkTriggerResponse($triggerData, $triggerName, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleOss);
+        $this->checkTriggerResponse($triggerData, $triggerName, $createTriggerDesc, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleOss);
 
         $err = '';
         try {
@@ -574,11 +577,13 @@ class ClientTest extends TestCase {
         $this->assertTrue($err != '');
 
         $getTriggerData = $this->fcClient->getTrigger($serviceName, $functionName, $triggerName)['data'];
-        $this->checkTriggerResponse($getTriggerData, $triggerName, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleOss);
+        $this->checkTriggerResponse($getTriggerData, $triggerName, $createTriggerDesc, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleOss);
 
         $prefixUpdate        = $prefix . 'update';
         $suffixUpdate        = $suffix . 'update';
+        $updateTriggerDesc   = 'update oss trigger';
         $triggerConfigUpdate = [
+            'description' => $updateTriggerDesc,
             'events' => ['oss:ObjectCreated:*'],
             'filter' => [
                 'key' => [
@@ -599,7 +604,7 @@ class ClientTest extends TestCase {
         );
 
         $updateTriggerData = $ret['data'];
-        $this->checkTriggerResponse($updateTriggerData, $triggerName, $triggerType, $triggerConfigUpdate, $sourceArn, $this->invocationRoleOss);
+        $this->checkTriggerResponse($updateTriggerData, $triggerName, $updateTriggerDesc, $triggerType, $triggerConfigUpdate, $sourceArn, $this->invocationRoleOss);
         $this->fcClient->deleteTrigger($serviceName, $functionName, $triggerName);
 
         for ($i = 1; $i < 6; $i++) {
@@ -643,6 +648,7 @@ class ClientTest extends TestCase {
     private function subTestLogTrigger($serviceName, $functionName) {
         $triggerType = 'log';
         $triggerName = 'test-trigger-sls';
+        $createTriggerDesc = 'create log trigger';
         $sourceArn   = sprintf('acs:log:%s:%s:project/%s', $this->region, $this->accountId, $this->logProject);
 
         $triggerConfig = [
@@ -666,6 +672,7 @@ class ClientTest extends TestCase {
             $functionName,
             array(
                 'triggerName'    => $triggerName,
+                'description'    => $createTriggerDesc,
                 'triggerType'    => $triggerType,
                 'invocationRole' => $this->invocationRoleSls,
                 'sourceArn'      => $sourceArn,
@@ -674,7 +681,7 @@ class ClientTest extends TestCase {
         );
 
         $triggerData = $ret['data'];
-        $this->checkTriggerResponse($triggerData, $triggerName, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleSls);
+        $this->checkTriggerResponse($triggerData, $triggerName, $createTriggerDesc, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleSls);
 
         $err = '';
         try {
@@ -695,10 +702,11 @@ class ClientTest extends TestCase {
         $this->assertTrue($err != '');
 
         $getTriggerData = $this->fcClient->getTrigger($serviceName, $functionName, $triggerName)['data'];
-        $this->checkTriggerResponse($getTriggerData, $triggerName, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleSls);
+        $this->checkTriggerResponse($getTriggerData, $triggerName, $createTriggerDesc, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleSls);
 
         $prefixUpdate        = $prefix . 'update';
         $suffixUpdate        = $suffix . 'update';
+        $updateTriggerDesc   = 'update log trigger';
         $triggerConfigUpdate = [
             'sourceConfig'      => [
                 'logstore' => $this->logStore . '_source',
@@ -720,13 +728,14 @@ class ClientTest extends TestCase {
             $functionName,
             $triggerName,
             array(
+                'description'    => $updateTriggerDesc,
                 'invocationRole' => $this->invocationRoleSls,
                 'triggerConfig'  => $triggerConfigUpdate,
             )
         );
 
         $updateTriggerData = $ret['data'];
-        $this->checkTriggerResponse($updateTriggerData, $triggerName, $triggerType, $triggerConfigUpdate, $sourceArn, $this->invocationRoleSls);
+        $this->checkTriggerResponse($updateTriggerData, $triggerName, $updateTriggerDesc, $triggerType, $triggerConfigUpdate, $sourceArn, $this->invocationRoleSls);
         $this->assertEquals($updateTriggerData['triggerConfig']['jobConfig']['triggerInterval'], 5);
         $this->assertEquals($updateTriggerData['triggerConfig']['jobConfig']['maxRetryTime'], 80);
         $this->fcClient->deleteTrigger($serviceName, $functionName, $triggerName);
@@ -736,6 +745,7 @@ class ClientTest extends TestCase {
         $triggerType    = 'http';
         $triggerName    = 'test-trigger-http';
         $sourceArn      = 'dummy_arn';
+        $description    = 'create http trigger';
         $invocationRole = '';
 
         $triggerConfig = [
@@ -748,6 +758,7 @@ class ClientTest extends TestCase {
             $functionName,
             array(
                 'triggerName'    => $triggerName,
+                'description'    => $description,
                 'triggerType'    => $triggerType,
                 'invocationRole' => $invocationRole,
                 'sourceArn'      => $sourceArn,
@@ -755,28 +766,30 @@ class ClientTest extends TestCase {
             )
         );
         $triggerData = $ret['data'];
-        $this->checkTriggerResponse($triggerData, $triggerName, $triggerType, $triggerConfig, null, $invocationRole);
+        $this->checkTriggerResponse($triggerData, $triggerName, $description, $triggerType, $triggerConfig, null, $invocationRole);
 
         $getTriggerData = $this->fcClient->getTrigger($serviceName, $functionName, $triggerName)['data'];
-        $this->checkTriggerResponse($getTriggerData, $triggerName, $triggerType, $triggerConfig, null, $invocationRole);
+        $this->checkTriggerResponse($getTriggerData, $triggerName, $description, $triggerType, $triggerConfig, null, $invocationRole);
 
         $triggerConfigUpdate = [
             'authType' => 'function',
             'methods'  => ['GET', 'POST'],
         ];
 
+        $updateTriggerDesc = 'update http trigger';
         $ret = $this->fcClient->updateTrigger(
             $serviceName,
             $functionName,
             $triggerName,
             array(
+                'description'    => $updateTriggerDesc,
                 'invocationRole' => $invocationRole,
                 'triggerConfig'  => $triggerConfigUpdate,
             )
         );
 
         $updateTriggerData = $ret['data'];
-        $this->checkTriggerResponse($updateTriggerData, $triggerName, $triggerType, $triggerConfigUpdate, null, $invocationRole);
+        $this->checkTriggerResponse($updateTriggerData, $triggerName, $updateTriggerDesc, $triggerType, $triggerConfigUpdate, null, $invocationRole);
         $this->assertEquals($updateTriggerData['triggerConfig']['authType'], 'function');
 
         $headers = [
