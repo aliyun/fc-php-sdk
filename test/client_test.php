@@ -836,6 +836,21 @@ class ClientTest extends TestCase {
         $this->fcClient->deleteTrigger($serviceName, $functionName, $triggerName);
     }
 
+    public function testListReservedCapacities() {
+        $r    = $this->fcClient->listReservedCapacities(["limit" => 5]);
+        $r    = $r['data'];
+        $rcs  = $r['reservedCapacities'];
+        $this->assertLessThanOrEqual(5, count($rcs));
+        
+        for ($i=0; $i<count($rcs); $i++){
+            $this->assertEquals(strlen($rcs[i]['instanceId']), 22);
+            $this->assertGreaterThan(0, $rcs[i]['cu']);
+            $this->assertGreaterThan($rcs[i]['createdTime'], $rcs[i]['deadline']);
+            $this->assertNotNull($rcs[i]['lastModifiedTime']);
+            $this->assertNotNull($rcs[i]['isRefunded']);
+        }
+    }
+
     public function testException() {
         $err = '';
         try {

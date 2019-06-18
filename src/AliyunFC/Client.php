@@ -820,4 +820,20 @@ class Client {
         $headers = $this->buildCommonHeaders($method, $path, $headers);
         return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
     }
+    
+    public function listReservedCapacities($options = [], $headers = []) {
+        /*
+        @param options: optional
+        @param headers, optional
+        1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+        2, 'if-match': string
+        3, user define key value
+        @return: array 
+         */
+        $method  = 'GET';
+        $path    = sprintf('/%s/reservedCapacities', $this->apiVersion);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
 }
