@@ -142,7 +142,7 @@ $fcClient->invokeFunction('service_name', 'function_name', $payload='hello_world
 
     
 // Invoke function asynchronously.
-$fcClient->invokeFunction('service_name', 'function_name', ['x-fc-invocation-type' => 'Async']);
+$fcClient->invokeFunction('service_name', 'function_name', 'hello world', ['x-fc-invocation-type' => 'Async']);
 
 // List services.
 $fcClient->listServices();
