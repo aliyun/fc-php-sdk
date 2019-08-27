@@ -15,7 +15,7 @@ The SDK of this version is dependent on the third-party HTTP library [guzzlehttp
 Running environment
 -------------------
 
-- PHP 5.5+.
+- PHP 5.6+.
 - cURL extension.
 
 
@@ -142,7 +142,7 @@ $fcClient->invokeFunction('service_name', 'function_name', $payload='hello_world
 
     
 // Invoke function asynchronously.
-$fcClient->invokeFunction('service_name', 'function_name', ['x-fc-invocation-type' => 'Async']);
+$fcClient->invokeFunction('service_name', 'function_name', 'hello world', ['x-fc-invocation-type' => 'Async']);
 
 // List services.
 $fcClient->listServices();

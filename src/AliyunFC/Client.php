@@ -257,7 +257,15 @@ class Client {
         $method  = 'GET';
         $path    = sprintf('/%s/services', $this->apiVersion);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
-
+        
+        if(array_key_exists("tags", $options)){
+            $tags = $options["tags"];
+            unset($options["tags"]);
+            foreach ($tags as $key => $value) {
+                $options["tag_".$key] = $value;
+            }
+        }
+    
         return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
     }
 
@@ -757,4 +765,59 @@ class Client {
         return $this->doRequest($method, $path, $headers);
     }
 
+    public function tagResource($payload,  $headers=[]){
+        /*
+        Tag on a resource, Currently only services are supported
+        :param payload
+            resourceArn: (required string), Resource ARN. Either full ARN or partial ARN
+            tags:(required array), A list of tag keys. At least 1 tag is required. At most 20. Tag key is required, but tag value is optional
+        :param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        return: array
+        */
+
+        $method = 'POST';
+        $path    = sprintf('/%s/tag', $this->apiVersion);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+    
+    public function untagResource($payload,  $headers=[]) {
+        /*
+        unTag on a resource, Currently only services are supported
+        :param payload
+            resourceArn: (required string), Resource ARN. Either full ARN or partial ARN
+            tagKeys:(optinal array), A list of tag keys.
+            deletaAll: (optinal bool), when tagKeys is empty and deleteAll be True can take effect.
+        :param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return: array
+        */
+        $method = 'DELETE';
+        $path    = sprintf('/%s/tag', $this->apiVersion);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+
+    public function getResourceTags($options, $headers=[]){
+        /*
+        get a resource's tags, Currently only services are supported
+        :param $options
+            resourceArn: (required string), Resource ARN. Either full ARN or partial ARN
+        :param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return: array
+        */
+        $method  = 'GET';
+        $path    = sprintf('/%s/tag', $this->apiVersion);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
 }
