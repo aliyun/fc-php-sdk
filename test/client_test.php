@@ -848,4 +848,74 @@ class ClientTest extends TestCase {
         }
         $this->assertTrue($err != '');
     }
+
+    public function testTag() {
+        $prefix = "test_php_tag_";
+        for ($x=0; $x<=3; $x++){
+            try{
+                $this->fcClient->deleteService($prefix . $x);
+            }
+            catch(Exception $e){}
+        }
+        
+        for ($i=0; $i<=3; $i++){
+            $this->fcClient->createService($prefix . $i);
+            $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
+            $this->fcClient->tagResource([
+                "resourceArn" => $resourceArn, 
+                "tags" => ["k3"=> "v3"],
+            ]);
+            if($i % 2 == 0){
+                    $this->fcClient->tagResource([
+                    "resourceArn" => $resourceArn, 
+                    "tags" => ["k1"=> "v1"],
+                ]);
+            }else{
+                    $this->fcClient->tagResource([
+                    "resourceArn" => $resourceArn, 
+                    "tags" => ["k2"=> "v2"],
+                ]);
+            }
+        }
+
+        $services        = $this->fcClient->listServices(['prefix' => $prefix])['data']['services'];
+        $this->assertEquals(count($services), 4);
+        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k1"=>"v1"]])['data']['services'];
+        $this->assertEquals(count($services), 2);
+        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k2"=>"v2"]])['data']['services'];
+        $this->assertEquals(count($services), 2);
+        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k3"=>"v3"]])['data']['services'];
+        $this->assertEquals(count($services), 4);
+        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k1"=>"v1", "k2"=>"v2"]])['data']['services'];
+        $this->assertEquals(count($services), 0);
+
+        for ($i=0; $i<=3; $i++){
+            $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
+            $resp = $this->fcClient->getResourceTags(["resourceArn"=>$resourceArn])['data'];
+            // var_export($resp);
+            $this->assertEquals($resourceArn, $resp['resourceArn']);
+            if($i % 2 == 0){
+                $this->assertEquals(0, count(array_diff($resp['tags'], ["k1"=>"v1", "k3"=>"v3"])));
+            }else{
+                $this->assertEquals(0, count(array_diff($resp['tags'], ["k2"=>"v2", "k3"=>"v3"])));
+            }
+            $this->fcClient->untagResource([
+                "resourceArn"=>$resourceArn, 
+                "tagKeys"=>["k3"],
+                "all"=>false,
+                ]
+            );
+            $resp = $this->fcClient->getResourceTags(["resourceArn"=>$resourceArn])['data'];
+            $this->assertEquals($resourceArn, $resp['resourceArn']);
+            if($i % 2 == 0){
+               $this->assertEquals(0, count(array_diff($resp['tags'], ["k1"=>"v1"])));
+            }else{
+            $this->assertEquals(0, count(array_diff($resp['tags'], ["k2"=>"v2"])));
+            }
+            $this->fcClient->untagResource(["resourceArn"=>$resourceArn, "tagKeys"=>[], "all"=>true]);
+            $resp = $this->fcClient->getResourceTags(["resourceArn"=>$resourceArn])['data'];
+            $this->assertEquals($resourceArn, $resp['resourceArn']);
+            $this->assertEquals(0, count($resp['tags']));
+        }
+    }
 }
