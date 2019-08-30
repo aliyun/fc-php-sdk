@@ -482,7 +482,7 @@ class ClientTest extends TestCase {
         $serviceName = $this->serviceName;
         $serviceDesc = "测试的service, php sdk 创建";
         $this->fcClient->createService($serviceName, $serviceDesc);
-        $functionName = "test";
+        $functionName =  $this->serviceName . "test";
         $this->fcClient->createFunction(
             $serviceName,
             array(
@@ -496,7 +496,7 @@ class ClientTest extends TestCase {
                 'description'  => "test function",
             )
         );
-        $httpFunctionName = "test-http";
+        $httpFunctionName = $this->serviceName . "test-http" ;
         $this->fcClient->createFunction(
             $serviceName,
             array(
@@ -510,8 +510,8 @@ class ClientTest extends TestCase {
                 'description'  => "test http function",
             )
         );
-        //$this->subTestOssTrigger($serviceName, $functionName);
-        //$this->subTestLogTrigger($serviceName, $functionName);
+        $this->subTestOssTrigger($serviceName, $functionName);
+        $this->subTestLogTrigger($serviceName, $functionName);
         $this->subTestHttpTrigger($serviceName, $httpFunctionName);
     }
 
@@ -527,13 +527,13 @@ class ClientTest extends TestCase {
     }
 
     private function subTestOssTrigger($serviceName, $functionName) {
-        $triggerType   = 'oss';
-        $triggerName   = 'test-trigger-oss';
+        $triggerType       = 'oss';
+        $triggerName       = 'test-trigger-oss';
         $createTriggerDesc = 'create oss trigger';
-        $sourceArn     = sprintf("acs:oss:%s:%s:%s", $this->region, $this->accountId, $this->codeBucket);
-        $prefix        = 'pre' . createUuid();
-        $suffix        = 'suf' . createUuid();
-        $triggerConfig = [
+        $sourceArn         = sprintf("acs:oss:%s:%s:%s", $this->region, $this->accountId, $this->codeBucket);
+        $prefix            = 'pre' . createUuid();
+        $suffix            = 'suf' . createUuid();
+        $triggerConfig     = [
             'events' => ['oss:ObjectCreated:*'],
             'filter' => [
                 'key' => [
@@ -583,9 +583,8 @@ class ClientTest extends TestCase {
         $suffixUpdate        = $suffix . 'update';
         $updateTriggerDesc   = 'update oss trigger';
         $triggerConfigUpdate = [
-            'description' => $updateTriggerDesc,
-            'events' => ['oss:ObjectCreated:*'],
-            'filter' => [
+            'events'      => ['oss:ObjectCreated:*'],
+            'filter'      => [
                 'key' => [
                     'prefix' => $prefixUpdate,
                     'suffix' => $suffixUpdate,
@@ -600,6 +599,7 @@ class ClientTest extends TestCase {
             array(
                 'invocationRole' => $this->invocationRoleOss,
                 'triggerConfig'  => $triggerConfigUpdate,
+                'description' => $updateTriggerDesc,
             )
         );
 
@@ -646,10 +646,10 @@ class ClientTest extends TestCase {
     }
 
     private function subTestLogTrigger($serviceName, $functionName) {
-        $triggerType = 'log';
-        $triggerName = 'test-trigger-sls';
+        $triggerType       = 'log';
+        $triggerName       = 'test-trigger-sls';
         $createTriggerDesc = 'create log trigger';
-        $sourceArn   = sprintf('acs:log:%s:%s:project/%s', $this->region, $this->accountId, $this->logProject);
+        $sourceArn         = sprintf('acs:log:%s:%s:project/%s', $this->region, $this->accountId, $this->logProject);
 
         $triggerConfig = [
             'sourceConfig'      => [
@@ -703,9 +703,7 @@ class ClientTest extends TestCase {
 
         $getTriggerData = $this->fcClient->getTrigger($serviceName, $functionName, $triggerName)['data'];
         $this->checkTriggerResponse($getTriggerData, $triggerName, $createTriggerDesc, $triggerType, $triggerConfig, $sourceArn, $this->invocationRoleSls);
-
-        $prefixUpdate        = $prefix . 'update';
-        $suffixUpdate        = $suffix . 'update';
+        
         $updateTriggerDesc   = 'update log trigger';
         $triggerConfigUpdate = [
             'sourceConfig'      => [
@@ -750,7 +748,7 @@ class ClientTest extends TestCase {
 
         $triggerConfig = [
             'authType' => 'anonymous',
-            'methods'  => ['GET'],
+            'methods'  => ['GET', 'POST', 'PUT'],
         ];
 
         $ret = $this->fcClient->createTrigger(
@@ -777,7 +775,7 @@ class ClientTest extends TestCase {
         ];
 
         $updateTriggerDesc = 'update http trigger';
-        $ret = $this->fcClient->updateTrigger(
+        $ret               = $this->fcClient->updateTrigger(
             $serviceName,
             $functionName,
             $triggerName,
@@ -865,72 +863,77 @@ class ClientTest extends TestCase {
     }
 
     public function testTag() {
-        $prefix = "test_php_tag_";
-        for ($x=0; $x<=3; $x++){
-            try{
-                $this->fcClient->deleteService($prefix . $x);
-            }
-            catch(Exception $e){}
-        }
-        
-        for ($i=0; $i<=3; $i++){
-            $this->fcClient->createService($prefix . $i);
-            $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
-            $this->fcClient->tagResource([
-                "resourceArn" => $resourceArn, 
-                "tags" => ["k3"=> "v3"],
-            ]);
-            if($i % 2 == 0){
-                    $this->fcClient->tagResource([
-                    "resourceArn" => $resourceArn, 
-                    "tags" => ["k1"=> "v1"],
+        $prefix = $this->serviceName . "test_php_tag_";
+        try {
+            for ($i = 0; $i <= 3; $i++) {
+                $this->fcClient->createService($prefix . $i);
+                $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
+                $this->fcClient->tagResource([
+                    "resourceArn" => $resourceArn,
+                    "tags"        => ["k3" => "v3"],
                 ]);
-            }else{
+                if ($i % 2 == 0) {
                     $this->fcClient->tagResource([
-                    "resourceArn" => $resourceArn, 
-                    "tags" => ["k2"=> "v2"],
-                ]);
+                        "resourceArn" => $resourceArn,
+                        "tags"        => ["k1" => "v1"],
+                    ]);
+                } else {
+                    $this->fcClient->tagResource([
+                        "resourceArn" => $resourceArn,
+                        "tags"        => ["k2" => "v2"],
+                    ]);
+                }
             }
-        }
 
-        $services        = $this->fcClient->listServices(['prefix' => $prefix])['data']['services'];
-        $this->assertEquals(count($services), 4);
-        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k1"=>"v1"]])['data']['services'];
-        $this->assertEquals(count($services), 2);
-        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k2"=>"v2"]])['data']['services'];
-        $this->assertEquals(count($services), 2);
-        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k3"=>"v3"]])['data']['services'];
-        $this->assertEquals(count($services), 4);
-        $services        = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k1"=>"v1", "k2"=>"v2"]])['data']['services'];
-        $this->assertEquals(count($services), 0);
+            $services = $this->fcClient->listServices(['prefix' => $prefix])['data']['services'];
+            $this->assertEquals(count($services), 4);
+            $services = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k1" => "v1"]])['data']['services'];
+            $this->assertEquals(count($services), 2);
+            $services = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k2" => "v2"]])['data']['services'];
+            $this->assertEquals(count($services), 2);
+            $services = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k3" => "v3"]])['data']['services'];
+            $this->assertEquals(count($services), 4);
+            $services = $this->fcClient->listServices(['prefix' => $prefix, 'tags' => ["k1" => "v1", "k2" => "v2"]])['data']['services'];
+            $this->assertEquals(count($services), 0);
 
-        for ($i=0; $i<=3; $i++){
-            $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
-            $resp = $this->fcClient->getResourceTags(["resourceArn"=>$resourceArn])['data'];
-            // var_export($resp);
-            $this->assertEquals($resourceArn, $resp['resourceArn']);
-            if($i % 2 == 0){
-                $this->assertEquals(0, count(array_diff($resp['tags'], ["k1"=>"v1", "k3"=>"v3"])));
-            }else{
-                $this->assertEquals(0, count(array_diff($resp['tags'], ["k2"=>"v2", "k3"=>"v3"])));
-            }
-            $this->fcClient->untagResource([
-                "resourceArn"=>$resourceArn, 
-                "tagKeys"=>["k3"],
-                "all"=>false,
+            for ($i = 0; $i <= 3; $i++) {
+                $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
+                $resp        = $this->fcClient->getResourceTags(["resourceArn" => $resourceArn])['data'];
+                // var_export($resp);
+                $this->assertEquals($resourceArn, $resp['resourceArn']);
+                if ($i % 2 == 0) {
+                    $this->assertEquals(0, count(array_diff($resp['tags'], ["k1" => "v1", "k3" => "v3"])));
+                } else {
+                    $this->assertEquals(0, count(array_diff($resp['tags'], ["k2" => "v2", "k3" => "v3"])));
+                }
+                $this->fcClient->untagResource([
+                    "resourceArn" => $resourceArn,
+                    "tagKeys"     => ["k3"],
+                    "all"         => false,
                 ]
-            );
-            $resp = $this->fcClient->getResourceTags(["resourceArn"=>$resourceArn])['data'];
-            $this->assertEquals($resourceArn, $resp['resourceArn']);
-            if($i % 2 == 0){
-               $this->assertEquals(0, count(array_diff($resp['tags'], ["k1"=>"v1"])));
-            }else{
-            $this->assertEquals(0, count(array_diff($resp['tags'], ["k2"=>"v2"])));
+                );
+                $resp = $this->fcClient->getResourceTags(["resourceArn" => $resourceArn])['data'];
+                $this->assertEquals($resourceArn, $resp['resourceArn']);
+                if ($i % 2 == 0) {
+                    $this->assertEquals(0, count(array_diff($resp['tags'], ["k1" => "v1"])));
+                } else {
+                    $this->assertEquals(0, count(array_diff($resp['tags'], ["k2" => "v2"])));
+                }
+                $this->fcClient->untagResource(["resourceArn" => $resourceArn, "tagKeys" => [], "all" => true]);
+                $resp = $this->fcClient->getResourceTags(["resourceArn" => $resourceArn])['data'];
+                $this->assertEquals($resourceArn, $resp['resourceArn']);
+                $this->assertEquals(0, count($resp['tags']));
             }
-            $this->fcClient->untagResource(["resourceArn"=>$resourceArn, "tagKeys"=>[], "all"=>true]);
-            $resp = $this->fcClient->getResourceTags(["resourceArn"=>$resourceArn])['data'];
-            $this->assertEquals($resourceArn, $resp['resourceArn']);
-            $this->assertEquals(0, count($resp['tags']));
+        } catch (Exception $e) {
+
+        } finally {
+            for ($x = 0; $x <= 3; $x++) {
+                try {
+                    $resourceArn = sprintf("acs:fc:%s:%s:services/%s", $this->region, $this->accountId, $prefix . $i);
+                    $this->fcClient->untagResource(["resourceArn" => $resourceArn, "tagKeys" => [], "all" => true]);
+                    $this->fcClient->deleteService($prefix . $x);
+                } catch (Exception $e) {}
+            }
         }
     }
 }
