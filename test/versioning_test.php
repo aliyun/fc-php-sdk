@@ -401,6 +401,32 @@ class VersioningTest extends TestCase {
         $this->checkFunction($functionName, $desc, $checksum, 'php7.2', 'index.handler', $v1);
         $this->checkFunction($functionName, $desc, $checksum, 'php7.2', 'index.handler', "test");
 
+        $data = $this->fcClient->putProvisionConfig($serviceName, "test", $functionName, ["target"=>10])['data'];
+        $this->assertEquals(10, $data['target']);
+        $this->assertEquals($this->accountId."#". $serviceName . "#test#". $functionName, $data['resource']);
+
+        $data = $this->fcClient->getProvisionConfig($serviceName, "test", $functionName)['data'];
+        $this->assertEquals(10, $data['target']);
+        $this->assertEquals($this->accountId."#". $serviceName . "#test#". $functionName, $data['resource']);
+        $this->assertTrue($data['current']>=0);
+
+        $data = $this->fcClient->listProvisionConfigs($serviceName, "test")['data'];
+        $this->assertEquals(1, count($data['provisionConfigs']));
+        $data = $data['provisionConfigs'][0];
+        $this->assertEquals(10, $data['target']);
+        $this->assertEquals($this->accountId."#". $serviceName . "#test#". $functionName, $data['resource']);
+        $this->assertTrue($data['current']>=0);
+
+        $err = '';
+        try {
+           $this->fcClient->listProvisionConfigs($serviceName, "test", ["limit"=>0])['data'];
+        } catch (Exception $e) {
+            $err = $e->getMessage();
+        }
+        $this->assertTrue($err != "");
+
+        $this->fcClient->putProvisionConfig($serviceName, "test", $functionName, ["target"=>0])['data'];
+
         $ret = $this->fcClient->updateFunction(
             $serviceName,
             $functionName,
