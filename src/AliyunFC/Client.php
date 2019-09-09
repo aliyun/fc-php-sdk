@@ -5,7 +5,7 @@ require_once 'auth.php';
 require_once 'util.php';
 
 class Client {
-    private $version = '1.0.0';
+    private $version = '1.2.0';
     private $endpoint;
     private $host;
     private $apiVersion;
