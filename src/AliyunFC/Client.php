@@ -829,11 +829,76 @@ class Client {
         2, 'if-match': string
         3, user define key value
         @return: array 
-         */
+        */
         $method  = 'GET';
         $path    = sprintf('/%s/reservedCapacities', $this->apiVersion);
         $headers = $this->buildCommonHeaders($method, $path, $headers);
 
+        return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
+
+    public function putProvisionConfig($serviceName, $qualifier, $functionName, $payload, $headers=[]){
+        /*
+        put provision config
+        @param service_name: name of the service.
+        @param qualifier: name of the service's alias.
+        @param functionName: name of the funtion.
+        @param payload: body of provision request
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, 'if-match': string (delete the service only when matched the given etag.)
+            3, user define key value
+        :return array
+        */
+        $method = 'PUT';
+        $path    = sprintf('/%s/services/%s.%s/functions/%s/provision-config', 
+            $this->apiVersion, $serviceName, $qualifier, $functionName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+    
+    public function getProvisionConfig($serviceName, $qualifier, $functionName, $headers=[]){
+        /*
+        put provision config
+        @param service_name: name of the service.
+        @param qualifier: name of the service's alias.
+        @param functionName: name of the funtion.
+        @param target: number of provision
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return array
+        */
+        $method  = 'GET';
+        $path    = sprintf('/%s/services/%s.%s/functions/%s/provision-config', 
+            $this->apiVersion, $serviceName, $qualifier, $functionName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers, $data = null, $query = null);
+    }
+    
+    public function listProvisionConfigs($serviceName, $qualifier, $options=[], $headers=[]){
+        /*
+        List the provision configin the current service.
+        @param serviceName: (optional, string), name of the service.
+        @param qualifier: (optional, string) name of the service's alias.
+        @param limit: (optional, integer) the total number of the returned aliases.
+        @param nextToken: (optional, string) continue listing the aliase from the previous point.
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return: array
+        */
+        if (!empty($qualifier) && empty($serviceName)){
+          throw new \Exception("serviceName is required when qualifier is not empty");
+        }
+        $method  = 'GET';
+        $path    = sprintf('/%s/provision-configs', $this->apiVersion);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        $options['serviceName']= $serviceName;
+        $options['qualifier']= $qualifier;
         return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
     }
 }
