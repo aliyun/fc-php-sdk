@@ -32,13 +32,15 @@ $ composer require aliyunfc/fc-php-sdk
 ```
 
 You can also declare the dependency on Alibaba Cloud FC SDK for PHP in the composer.json file.
+
 ```json
  "require": {
-      "aliyunfc/fc-php-sdk": "~1.1"
+      "aliyunfc/fc-php-sdk": "~1.2"
   }
 ```
 
 Then run `composer install --no-dev` to install the dependency. After the Composer Dependency Manager is installed, import the dependency in your PHP code:
+
 ```php
  require_once __DIR__ . '/vendor/autoload.php';
 ```
