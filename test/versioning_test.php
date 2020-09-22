@@ -126,6 +126,12 @@ class VersioningTest extends TestCase {
             }
 
             $this->fcClient->deleteService($serviceName);
+
+            $data = $this->fcClient->listFunctionAsyncConfigs($serviceName, $functionName, ["limit"=>2])['data'];
+            foreach ($data['configs'] as $c) {
+                $this->fcClient->deleteFunctionAsyncConfig($c['service'], $c['qualifier'], $c['function']);
+
+            }
         } catch (Exception $e) {
         }
     }
@@ -537,6 +543,83 @@ class VersioningTest extends TestCase {
         $this->assertEquals($r3, $r4);
         $functions = $r3['functions'];
         $this->assertEquals(count($functions), 6);
+    }
+
+    public function testAsyncConfig() {
+        $serviceName = $this->serviceName;
+        $serviceDesc = "测试的service, php sdk 创建";
+        $this->fcClient->createService(
+            $serviceName,
+            $serviceDesc,
+            $options = $this->opts
+        );
+
+        $functionName = 'test_function';
+        $desc         = '这是测试function';
+
+        $function = $this->fcClient->createFunction(
+            $serviceName,
+            array(
+                'functionName' => $functionName,
+                'handler'      => 'index.handler',
+                'runtime'      => 'php7.2',
+                'memorySize'   => 128,
+                'code'         => array(
+                    'zipFile' => base64_encode(file_get_contents(__DIR__ . '/index.zip')),
+                ),
+                'description'  => $desc,
+            )
+        );
+
+        $function = $function['data'];
+        $checksum = $function['codeChecksum'];
+        $this->checkFunction($functionName, $desc, $checksum, 'php7.2', 'index.handler');
+
+        $data = $this->fcClient->publishVersion($serviceName, "test service v1 desc")['data'];
+        $v1   = $data['versionId'];
+        $this->fcClient->createAlias($serviceName,
+            ['aliasName'              => 'test',
+                'versionId'               => $v1,
+                'description'             => 'test alias',
+                'additionalVersionWeight' => ["1" => 0.9],
+            ]);
+
+        $this->checkFunction($functionName, $desc, $checksum, 'php7.2', 'index.handler', $v1);
+        $this->checkFunction($functionName, $desc, $checksum, 'php7.2', 'index.handler', "test");
+
+        $destination = sprintf('acs:fc:%s:%s:services/%s/functions/fc2', $this->region, $this->accoutId, $serviceName);
+        $asyncConfig = [
+            'destinationConfig' => [
+                'onSuccess' => ['destination'=>$destination],
+            ],
+            'maxAsyncEventAgeInSeconds' => 100,
+            'maxAsyncRetryAttempts'  => 1,
+        ];
+        $data = $this->fcClient->putFunctionAsyncConfig($serviceName, "test", $functionName, $asyncConfig)['data'];
+
+        $this->assertEquals($serviceName, $data['service']);
+        $this->assertEquals("test", $data['qualifier']);
+        $this->assertEquals($functionName, $data['function']);
+        $this->assertEquals($destination, $data['destinationConfig']['onSuccess']['destination']);
+        $this->assertNotEmpty($data['lastModifiedTime']);
+        $this->assertNotEmpty($data['createdTime']);
+        $this->assertEquals(100, $data['maxAsyncEventAgeInSeconds']);
+        $this->assertEquals(1, $data['maxAsyncRetryAttempts']);
+
+        $data = $this->fcClient->getFunctionAsyncConfig($serviceName, "test", $functionName)['data'];
+        $this->assertEquals($serviceName, $data['service']);
+        $this->assertEquals("test", $data['qualifier']);
+        $this->assertEquals($functionName, $data['function']);
+
+        $data = $this->fcClient->listFunctionAsyncConfigs($serviceName, $functionName, ["limit"=>2])['data'];
+        $this->assertEquals(1, count($data['configs']));
+
+        $this->fcClient->deleteFunctionAsyncConfig($serviceName, "test", $functionName);
+
+        $data2 = $this->fcClient->putFunctionAsyncConfig($serviceName, "LATEST", $functionName, $asyncConfig)['data'];
+        $this->assertEquals("LATEST", $data2['qualifier']);
+
+        $this->fcClient->deleteFunctionAsyncConfig($serviceName, "LATEST", $functionName);
     }
 
     public function testInvokeFunciton() {

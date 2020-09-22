@@ -901,4 +901,85 @@ class Client {
         $options['qualifier']= $qualifier;
         return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
     }
+
+    public function putFunctionAsyncConfig($serviceName, $qualifier, $functionName, $payload, $headers=[]){
+        /*
+        put async config
+        @param service_name: name of the service.
+        @param qualifier: name of the service's alias.
+        @param functionName: name of the funtion.
+        @param payload: body of async config request
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return array
+        */
+        $method = 'PUT';
+        $path    = sprintf('/%s/services/%s.%s/functions/%s/async-invoke-config',
+            $this->apiVersion, $serviceName, $qualifier, $functionName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        $content                   = json_encode($payload);
+        $headers['content-length'] = strlen($content);
+        return $this->doRequest($method, $path, $headers, $data = $content);
+    }
+
+    public function getFunctionAsyncConfig($serviceName, $qualifier, $functionName, $headers=[]){
+        /*
+        get async config
+        @param service_name: name of the service.
+        @param qualifier: name of the service's alias.
+        @param functionName: name of the funtion.
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return array
+        */
+        $method  = 'GET';
+        $path    = sprintf('/%s/services/%s.%s/functions/%s/async-invoke-config',
+            $this->apiVersion, $serviceName, $qualifier, $functionName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers, $data = null, $query = null);
+    }
+
+    public function listFunctionAsyncConfigs($serviceName, $functionName, $options=[], $headers=[]){
+        /*
+        List the async config in the current function.
+        @param serviceName: name of the service.
+        @param functionName: name of the function.
+        @param limit: (optional, integer) the total number of the returned aliases.
+        @param nextToken: (optional, string) continue listing the configs from the previous point.
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return: array
+        */
+        if (!empty($qualifier) && empty($serviceName)){
+            throw new \Exception("serviceName is required when qualifier is not empty");
+        }
+        $method  = 'GET';
+        $path    = sprintf('/%s/services/%s/functions/%s/async-invoke-configs',
+            $this->apiVersion, $serviceName, $functionName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+        return $this->doRequest($method, $path, $headers, $data = null, $query = $options);
+    }
+
+    public function deleteFunctionAsyncConfig($serviceName, $qualifier, $functionName, $headers=[]){
+        /*
+        delete async config
+        @param service_name: name of the service.
+        @param qualifier: name of the service's alias.
+        @param functionName: name of the function.
+        @param headers, optional
+            1, 'x-fc-trace-id': string (a uuid to do the request tracing)
+            2, user define key value
+        :return array
+        */
+        $method  = 'DELETE';
+        $path    = sprintf('/%s/services/%s.%s/functions/%s/async-invoke-config',
+            $this->apiVersion, $serviceName, $qualifier, $functionName);
+        $headers = $this->buildCommonHeaders($method, $path, $headers);
+
+        return $this->doRequest($method, $path, $headers, $data = null, $query = null);
+    }
 }
