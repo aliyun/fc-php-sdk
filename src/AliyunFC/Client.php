@@ -270,9 +270,6 @@ class Client {
     }
 
     private function normalizeParams(&$opts) {
-        if (!(isset($opts['functionName']) && isset($opts['runtime']) && isset($opts['handler']) && isset($opts['code']))) {
-            throw new \Exception('functionName|handler|runtime|code parameters must be specified');
-        }
         $opts['functionName']          = strval($opts['functionName']);
         $opts['runtime']               = strval($opts['runtime']);
         $opts['handler']               = strval($opts['handler']);
@@ -293,6 +290,10 @@ class Client {
         3, user define key value
         @return: array
          */
+        $opts = $functionPayload;
+        if (!(isset($opts['functionName']) && isset($opts['runtime']) && isset($opts['handler']) && isset($opts['code']))) {
+           throw new \Exception('functionName|handler|runtime|code parameters must be specified');
+        }
         $this->normalizeParams($functionPayload);
         $method                    = 'POST';
         $path                      = sprintf('/%s/services/%s/functions', $this->apiVersion, $serviceName);
@@ -321,6 +322,11 @@ class Client {
         $path                    = sprintf('/%s/services/%s/functions/%s', $this->apiVersion, $serviceName, $functionName);
         $headers                 = $this->buildCommonHeaders($method, $path, $headers);
         $options['functionName'] = $functionName;
+
+        if ( !( isset($options['runtime']) || isset($options['handler']) || isset($options['code'])) ) {
+            throw new \Exception('handler|runtime|code parameters, one has a value ');
+        }
+
         $this->normalizeParams($options);
         unset($options['functionName']);
         $content                   = json_encode($options);

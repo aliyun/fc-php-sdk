@@ -72,6 +72,7 @@ class ClientTest extends TestCase {
             'vpcId'           => $vpcId,
             'vSwitchIds'      => array($vSwitchIds),
             'securityGroupId' => $securityGroupId,
+            'role'            => "",
         );
 
         $this->opts = array(
@@ -323,7 +324,6 @@ class ClientTest extends TestCase {
             $serviceName,
             $functionName,
             array(
-                'functionName'         => $functionName,
                 'handler'              => 'counter.handler',
                 'initializer'          => 'counter.initializer',
                 'runtime'              => 'php7.2',
