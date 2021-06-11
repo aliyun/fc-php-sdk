@@ -30,8 +30,7 @@ class Auth {
         @param $headers: headers of the http request.
         @param $unescaped_path: unescaped path without queries of the http request.
         @return: the signature string.
-         */
-
+        */
         $content_md5        = isset($headers['content-md5']) ? $headers['content-md5'] : '';
         $content_type       = isset($headers['content-type']) ? $headers['content-type'] : '';
         $date               = isset($headers['date']) ? $headers['date'] : '';

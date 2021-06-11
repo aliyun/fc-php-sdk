@@ -68,6 +68,8 @@ class VersioningTest extends TestCase {
             "logConfig"      => array(
                 "project"  => $logProject,
                 "logstore" => $logStore,
+                "enableRequestMetrics" => false,
+                "enableInstanceMetrics" => false,
             ),
             "role"           => $role,
             "vpcConfig"      => $vpcConfig,
