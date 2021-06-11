@@ -1,7 +1,7 @@
 <?php
 namespace AliyunFC;
 
-require_once 'auth.php';
+require_once 'Auth.php';
 require_once 'util.php';
 
 class Client {
