@@ -323,9 +323,6 @@ class Client {
         $headers                 = $this->buildCommonHeaders($method, $path, $headers);
         $options['functionName'] = $functionName;
 
-        if ( !( isset($options['runtime']) || isset($options['handler']) || isset($options['code'])) ) {
-            throw new \Exception('handler|runtime|code parameters, one has a value ');
-        }
 
         $this->normalizeParams($options);
         unset($options['functionName']);
